@@ -23,18 +23,18 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+        cache: 'yarn'
 
     - name: Install dependencies (Strict)
-      run: npm ci
-      # npm ci is faster and ensures we use exact versions from package-lock.json
+      run: yarn install --frozen-lockfile
+      # --frozen-lockfile ensures we use exact versions from yarn.lock (equivalent to npm ci)
 
     - name: Type Check
-      run: npm run typecheck
+      run: yarn typecheck
       # Ensures no TypeScript errors exist anywhere (src/tests)
 
     - name: Run Tests (Unit & Integration)
-      run: npm test
+      run: yarn test
       # This runs unit tests, builds the package, and runs integration tests
 
     - name: Upload coverage to Codecov
@@ -43,4 +43,3 @@ jobs:
         directory: ./test-reports/coverage
         fail_ci_if_error: false # Optional: Don't fail the pipeline if upload fails
         token: ${{ secrets.CODECOV_TOKEN }} # Required for private repos, optional for public
-

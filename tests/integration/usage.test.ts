@@ -33,7 +33,9 @@ describe('Integration: Consumer Usage', () => {
     
     if (Result.isErr(result)) {
       expect(result.error).toBeInstanceOf(Error);
-      expect(result.error.message).toBe('Database disconnected');
+      if (result.error instanceof Error) {
+        expect(result.error.message).toBe('Database disconnected');
+      }
     }
   });
 });
