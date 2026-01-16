@@ -1,6 +1,6 @@
 {
   "name": "@skapxd/result",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Type-safe error handling for TypeScript, inspired by Rust",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -44,5 +44,9 @@
     "tsup": "8.5.1",
     "typescript": "5.9.3",
     "vitest": "4.0.17"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skapxd/result.git"
   }
 }
