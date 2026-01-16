@@ -1,0 +1,48 @@
+{
+  "name": "@skapxd/result",
+  "version": "1.0.0",
+  "description": "Type-safe error handling for TypeScript, inspired by Rust",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "vitest run -c vitest.unit.config.ts",
+    "test:integration": "npm run build && vitest run -c vitest.integration.config.ts",
+    "test:ui": "vitest --ui -c vitest.unit.config.ts",
+    "report:unit": "npx vite preview --outDir test-reports/unit",
+    "report:coverage": "npx vite preview --outDir test-reports/coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "result",
+    "error-handling",
+    "typescript",
+    "safe",
+    "rust-inspired",
+    "monad",
+    "pattern-matching"
+  ],
+  "author": "skapxd",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.0.17",
+    "@vitest/ui": "4.0.17",
+    "ts-pattern": "5.9.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.17"
+  }
+}

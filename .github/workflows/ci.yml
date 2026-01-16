@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies (Strict)
+      run: npm ci
+      # npm ci is faster and ensures we use exact versions from package-lock.json
+
+    - name: Type Check
+      run: npm run typecheck
+      # Ensures no TypeScript errors exist anywhere (src/tests)
+
+    - name: Run Tests (Unit & Integration)
+      run: npm test
+      # This runs unit tests, builds the package, and runs integration tests
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        directory: ./test-reports/coverage
+        fail_ci_if_error: false # Optional: Don't fail the pipeline if upload fails
+        token: ${{ secrets.CODECOV_TOKEN }} # Required for private repos, optional for public
+
