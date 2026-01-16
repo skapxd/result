@@ -18,9 +18,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "npm run test:unit && npm run test:integration",
+    "test": "yarn run test:unit && yarn run test:integration",
     "test:unit": "vitest run -c vitest.unit.config.ts",
-    "test:integration": "npm run build && vitest run -c vitest.integration.config.ts",
+    "test:integration": "yarn run build && vitest run -c vitest.integration.config.ts",
     "test:ui": "vitest --ui -c vitest.unit.config.ts",
     "report:unit": "npx vite preview --outDir test-reports/unit",
     "report:coverage": "npx vite preview --outDir test-reports/coverage",
