@@ -1,10 +1,13 @@
-name: CI
+name: CI/CD
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  # Se ejecuta cuando creas una Release en GitHub
+  release:
+    types: [created]
 
 jobs:
   build-and-test:
@@ -13,7 +16,6 @@ jobs:
     strategy:
       matrix:
         node-version: [20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - name: Checkout repository
@@ -25,21 +27,46 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'yarn'
 
-    - name: Install dependencies (Strict)
+    - name: Install dependencies (Frozen Lockfile)
       run: yarn install --frozen-lockfile
-      # --frozen-lockfile ensures we use exact versions from yarn.lock (equivalent to npm ci)
 
     - name: Type Check
       run: yarn typecheck
-      # Ensures no TypeScript errors exist anywhere (src/tests)
 
-    - name: Run Tests (Unit & Integration)
+    - name: Run Tests
       run: yarn test
-      # This runs unit tests, builds the package, and runs integration tests
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         directory: ./test-reports/coverage
-        fail_ci_if_error: false # Optional: Don't fail the pipeline if upload fails
-        token: ${{ secrets.CODECOV_TOKEN }} # Required for private repos, optional for public
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  publish:
+    name: Publish to NPM
+    needs: build-and-test # Solo publica si los tests pasaron
+    if: github.event_name == 'release' # Solo corre en releases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for Publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          # Esto configura el .npmrc automáticamente para usar el token
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build Package
+        run: yarn build
+
+      - name: Publish to NPM
+        run: npm publish --access public
+        env:
+          # GitHub inyectará este token desde tus secretos
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
