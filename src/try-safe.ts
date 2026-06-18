@@ -6,8 +6,9 @@ import { type Result } from './result';
  *
  * Logic:
  * 1. If T is `never` (function throws), return `Result<T, unknown>`.
- * 2. If T is a thenable (`PromiseLike<U>` — a native `Promise` OR any object with a `.then`,
- *    e.g. a lazy Mongoose `Query` / Knex / TypeORM `QueryBuilder`), return `Promise<Result<U, unknown>>`.
+ * 2. If T is a thenable (a native `Promise` OR any object with a `.then`,
+ *    e.g. a lazy Mongoose `Query` / Knex / TypeORM `QueryBuilder`), return
+ *    `Promise<Result<Awaited<T>, unknown>>`.
  * 3. Otherwise, return `Result<T, unknown>`.
  *
  * We use `unknown` for the error type because in JavaScript/TypeScript, anything can be thrown
@@ -15,8 +16,8 @@ import { type Result } from './result';
  */
 export type SafeExecutionResult<T> = [T] extends [never]
   ? Result<T, unknown>
-  : T extends PromiseLike<infer U>
-    ? Promise<Result<U, unknown>>
+  : T extends PromiseLike<unknown>
+    ? Promise<Result<Awaited<T>, unknown>>
     : Result<T, unknown>;
 
 /**
@@ -57,9 +58,9 @@ export function trySafe<T>(fn: () => T): SafeExecutionResult<T> {
       result != null && typeof (result as { then?: unknown }).then === 'function';
 
     if (isThenable) {
-      // Two-argument `.then` (not `.then().catch()`): `PromiseLike` only guarantees `.then`,
-      // so we must not rely on a `.catch` existing on the value (or on what `.then` returns).
-      return (result as unknown as PromiseLike<unknown>).then(
+      // Promise.resolve assimilates thenables using the same semantics as `await`.
+      // The two-argument `.then` keeps us independent from `.catch` on custom thenables.
+      return Promise.resolve(result).then(
         (value: unknown) => ({ ok: true, value }),
         (error: unknown) => ({ ok: false, error }), // Return the error exactly as received
       ) as unknown as SafeExecutionResult<T>;

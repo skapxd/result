@@ -104,6 +104,38 @@ describe('trySafe', () => {
         expect(res.error).toBe(failure);
       }
     });
+
+    it('follows await semantics when a thenable throws after resolving', async () => {
+      const resolvingThenThrowing = {
+        then(onFulfilled: (value: string) => unknown) {
+          onFulfilled('resolved-value');
+          throw new Error('ignored after resolve');
+        },
+      } as unknown as PromiseLike<string>;
+
+      const res = await trySafe(() => resolvingThenThrowing);
+
+      expect(res).toEqual({ ok: true, value: 'resolved-value' });
+    });
+
+    it('returns a promise result when a thenable throws before settling', async () => {
+      const failure = new Error('broken then');
+      const throwingThenable = {
+        then() {
+          throw failure;
+        },
+      } as unknown as PromiseLike<string>;
+
+      const pending = trySafe(() => throwingThenable);
+      expect(pending).toBeInstanceOf(Promise);
+
+      const res = await pending;
+
+      expect(res.ok).toBe(false);
+      if (Result.isErr(res)) {
+        expect(res.error).toBe(failure);
+      }
+    });
   });
 
   describe('Integration with ts-pattern', () => {
