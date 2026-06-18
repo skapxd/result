@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { match } from 'ts-pattern';
-import { trySafe } from './index';
-import { Result } from '../result';
+import { trySafe } from './try-safe';
+import { Result } from './result';
 
 describe('trySafe', () => {
   describe('Synchronous operations', () => {
@@ -62,6 +62,46 @@ describe('trySafe', () => {
       expect(res.ok).toBe(false);
       if (Result.isErr(res) && res.error instanceof Error) {
         expect(res.error.message).toBe('async boom');
+      }
+    });
+  });
+
+  describe('Thenables that are not native Promises (PromiseLike)', () => {
+    it('runs and awaits a lazy thenable that is NOT instanceof Promise (Mongoose Query style)', async () => {
+      // Una Query de Mongoose es thenable pero NO `instanceof Promise`, y es lazy:
+      // solo ejecuta cuando algo la dispara (await / .then / .exec()).
+      let executed = false;
+      const lazyQuery: PromiseLike<string> = {
+        then(onFulfilled, onRejected) {
+          executed = true; // el efecto SOLO corre cuando se await-ea el thenable
+          return Promise.resolve('db-value').then(onFulfilled, onRejected);
+        },
+      };
+
+      // Precondición: no es una Promise nativa (por eso el bug del no-op existía).
+      expect(lazyQuery instanceof Promise).toBe(false);
+
+      const res = await trySafe(() => lazyQuery);
+
+      // Antes: la guardaba sin ejecutar -> { ok: true, value: <Query sin correr> } (no-op silencioso).
+      expect(executed).toBe(true);
+      expect(res).toEqual({ ok: true, value: 'db-value' });
+    });
+
+    it('captures rejection from a thenable using two-arg then (no reliance on .catch)', async () => {
+      const failure = new Error('thenable boom');
+      // Objeto con SOLO `.then` (sin `.catch`): exige que trySafe use `.then(onOk, onErr)`.
+      const rejectingThenable = {
+        then(_onFulfilled: unknown, onRejected: (reason: unknown) => unknown) {
+          return Promise.resolve(onRejected(failure));
+        },
+      } as unknown as PromiseLike<string>;
+
+      const res = await trySafe(() => rejectingThenable);
+
+      expect(res.ok).toBe(false);
+      if (Result.isErr(res)) {
+        expect(res.error).toBe(failure);
       }
     });
   });
