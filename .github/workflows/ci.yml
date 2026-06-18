@@ -59,8 +59,11 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          # Esto configura el .npmrc automáticamente para usar el token
           registry-url: 'https://registry.npmjs.org'
+
+      # El Trusted Publisher (OIDC) requiere npm >= 11.5.1; node 22.x trae npm 10.x.
+      - name: Update npm for OIDC trusted publishing
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -68,8 +71,8 @@ jobs:
       - name: Build Package
         run: yarn build
 
-      - name: Publish to NPM
-        run: npm publish --access public --provenance
-        env:
-          # GitHub inyectará este token desde tus secretos
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Sin NODE_AUTH_TOKEN: el Trusted Publisher (OIDC) configurado en npm
+      # autentica via el id-token de Actions (permissions.id-token: write).
+      # La provenance se genera automaticamente al publicar via OIDC.
+      - name: Publish to NPM (OIDC trusted publisher)
+        run: npm publish --access public
