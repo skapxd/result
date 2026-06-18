@@ -1,4 +1,4 @@
-import { type Result } from '../result';
+import { type Result } from './result';
 
 /**
  * Infers the safe return type based on whether the input is a thenable (PromiseLike),
@@ -62,14 +62,14 @@ export function trySafe<T>(fn: () => T): SafeExecutionResult<T> {
       return (result as unknown as PromiseLike<unknown>).then(
         (value: unknown) => ({ ok: true, value }),
         (error: unknown) => ({ ok: false, error }), // Return the error exactly as received
-      ) as any;
+      ) as unknown as SafeExecutionResult<T>;
     }
 
-    return { ok: true, value: result } as any;
+    return { ok: true, value: result } as unknown as SafeExecutionResult<T>;
   } catch (error) {
     return {
       ok: false,
       error, // Return the error exactly as received
-    } as any;
+    } as unknown as SafeExecutionResult<T>;
   }
 }

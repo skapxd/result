@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Result } from './index'; // Import relativo local
+import { Result } from './result'; // Import relativo local
 import { match } from 'ts-pattern';
 
 describe('Result API', () => {

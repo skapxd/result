@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { match } from 'ts-pattern';
-import { trySafe } from './index';
-import { Result } from '../result';
+import { trySafe } from './try-safe';
+import { Result } from './result';
 
 describe('trySafe', () => {
   describe('Synchronous operations', () => {
